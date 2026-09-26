@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, available_timezones
 
-__all__ = ["ConversionResult", "NonexistentTimeError", "convert"]
+__all__ = ["ConversionResult", "NonexistentTimeError", "convert", "search_zones"]
 
 
 class NonexistentTimeError(ValueError):
@@ -56,6 +56,17 @@ def convert(
         target=target,
         is_ambiguous=_is_ambiguous(local_dt, src),
     )
+
+
+def search_zones(pattern: str = "") -> list[str]:
+    """Return known IANA zone names containing pattern (case-insensitive), sorted.
+
+    Matching is a plain substring test, not a glob or regex, so e.g. "chatham"
+    finds "Pacific/Chatham" and an empty pattern lists every zone the local
+    tzdata knows about.
+    """
+    needle = pattern.lower()
+    return sorted(name for name in available_timezones() if needle in name.lower())
 
 
 def _is_nonexistent(naive_dt: datetime, zone: ZoneInfo) -> bool:

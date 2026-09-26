@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 from zoneinfo import ZoneInfoNotFoundError
 
-from .core import ConversionResult, NonexistentTimeError, convert
+from .core import ConversionResult, NonexistentTimeError, convert, search_zones
 
 TIME_FORMATS = (
     "%Y-%m-%d %H:%M:%S",
@@ -33,9 +33,11 @@ def build_parser() -> argparse.ArgumentParser:
         prog="zonemath",
         description="Convert a wall-clock time from one IANA timezone to another.",
     )
-    parser.add_argument("time", type=_parse_time, help="local time, e.g. '2026-03-08 02:30'")
-    parser.add_argument("from_zone", help="source IANA zone, e.g. America/New_York")
-    parser.add_argument("to_zone", help="target IANA zone, e.g. Europe/London")
+    parser.add_argument(
+        "time", type=_parse_time, nargs="?", help="local time, e.g. '2026-03-08 02:30'"
+    )
+    parser.add_argument("from_zone", nargs="?", help="source IANA zone, e.g. America/New_York")
+    parser.add_argument("to_zone", nargs="?", help="target IANA zone, e.g. Europe/London")
     parser.add_argument(
         "--fold",
         type=int,
@@ -43,12 +45,29 @@ def build_parser() -> argparse.ArgumentParser:
         default=0,
         help="which occurrence to use if the time is ambiguous (default: 0, the earlier one)",
     )
+    parser.add_argument(
+        "--list-zones",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="PATTERN",
+        help="list known IANA zone names (optionally filtered by a case-insensitive "
+        "substring) and exit, ignoring the other arguments",
+    )
     return parser
 
 
 def main(argv: "list[str] | None" = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.list_zones is not None:
+        for name in search_zones(args.list_zones):
+            print(name)
+        return 0
+
+    if args.time is None or args.from_zone is None or args.to_zone is None:
+        parser.error("time, from_zone, and to_zone are required unless --list-zones is given")
 
     try:
         result: ConversionResult = convert(args.time, args.from_zone, args.to_zone, fold=args.fold)

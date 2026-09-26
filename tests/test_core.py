@@ -3,7 +3,7 @@
 import unittest
 from datetime import datetime, timezone
 
-from zonemath.core import NonexistentTimeError, convert
+from zonemath.core import NonexistentTimeError, convert, search_zones
 
 
 class ConvertTests(unittest.TestCase):
@@ -80,6 +80,25 @@ class ConvertTests(unittest.TestCase):
         aware = datetime(2026, 1, 1, tzinfo=timezone.utc)
         with self.assertRaises(ValueError):
             convert(aware, "UTC", "America/New_York")
+
+
+class SearchZonesTests(unittest.TestCase):
+    def test_empty_pattern_returns_everything_sorted(self):
+        results = search_zones()
+        self.assertIn("America/New_York", results)
+        self.assertIn("Pacific/Chatham", results)
+        self.assertEqual(results, sorted(results))
+
+    def test_pattern_filters_case_insensitively(self):
+        self.assertEqual(search_zones("chatham"), ["Pacific/Chatham"])
+        self.assertEqual(search_zones("CHATHAM"), ["Pacific/Chatham"])
+
+    def test_pattern_matches_anywhere_in_the_name(self):
+        results = search_zones("indian")
+        self.assertIn("America/Indiana/Knox", results)
+
+    def test_unmatched_pattern_returns_empty_list(self):
+        self.assertEqual(search_zones("not_a_real_zone_fragment"), [])
 
 
 if __name__ == "__main__":

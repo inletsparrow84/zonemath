@@ -61,6 +61,26 @@ Timezone names are IANA identifiers (`Europe/London`, `Australia/Sydney`,
 `Pacific/Chatham`), the same names used by `zoneinfo`, not fixed UTC
 offsets - offsets change with DST and with policy, zone names don't.
 
+If you don't remember the exact identifier, search for it:
+
+```
+$ python -m zonemath --list-zones chatham
+Pacific/Chatham
+
+$ python -m zonemath --list-zones indiana
+America/Indiana/Indianapolis
+America/Indiana/Knox
+America/Indiana/Marengo
+America/Indiana/Petersburg
+America/Indiana/Tell_City
+America/Indiana/Vevay
+America/Indiana/Vincennes
+America/Indiana/Winamac
+```
+
+`--list-zones` with no pattern lists every zone the local tzdata knows
+about. The same lookup is available from Python as `zonemath.search_zones`.
+
 ## Requirements
 
 Python 3.9+, standard library only. On Linux you may need the `tzdata`
